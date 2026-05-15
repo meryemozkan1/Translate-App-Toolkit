@@ -1,111 +1,64 @@
 import { useEffect, useMemo, useState } from "react";
-import Select from "react-select";
-import getLanguages, { translateText } from "./redux/actions";
 import { useDispatch, useSelector } from "react-redux";
+import Select from "react-select";
+import { getLanguages, translateText } from "./redux/actions/index";
 
 function App() {
   const dispatch = useDispatch();
+  const translateState = useSelector((s) => s.translateReducer);
+  const { languages } = useSelector((s) => s.languageReducer);
 
-  const translateState = useSelector((store) => store.translateReducer);
-
-  const { isLoading, error, languages } = useSelector(
-    (store) => store.languageReducer
-  );
-
-  const [sourceLang, setSourceLang] = useState({
-    label: "Turkish",
-    value: "tr",
-  });
-
-  const [targetLang, setTargetLang] = useState({
-    label: "English",
-    value: "en",
-  });
+  const [sourceLang, setSourceLang] = useState({ label: "Turkish", value: "tr" });
+  const [targetLang, setTargetLang] = useState({ label: "English", value: "en" });
   const [text, setText] = useState("");
+
   useEffect(() => {
+    // Sadece bileşen yüklendiğinde BİR KEZ çalışır. 429 hatasını bu önler.
     dispatch(getLanguages());
-  }, []);
-  /**
-   * Dil dizinin bizden istenilen formata çevirmek için map ile döndük
-   *Dizinin içerisinde her bir elemanın code ve name değerlerini value ve label değerlerine çevirdi
-   *Diziyi formatlama işleminde her render sırasında olmasını istemediğimiz için useMemo kullanarak cache'e gönderdik.
-   */
+  }, []); 
 
-  const formatted = useMemo(
-    () =>
-      languages.map((i) => ({
-        label: i.name,
-        value: i.code,
-      })),
-    [languages]
-  );
-
-  const handleTranslate = () => {
-    dispatch(translateText({ sourceLang, targetLang, text }));
-  };
-  const handleSwap = () => {
-    //* select alanındaki veriler yer değitirir
-    setSourceLang(targetLang);
-    setTargetLang(sourceLang);
-  };
+  const formatted = useMemo(() => {
+    const data = Array.isArray(languages) ? languages : [];
+    return data.map((i) => ({
+      label: i.name || i.language,
+      value: i.code || i.language,
+    }));
+  }, [languages]);
 
   return (
-    <div className=" body h-screen text-white grid place-items-center">
-      <div className="w-[800vw] max-w-[1100px] flex flex-col justify-center">
-        <h1 className="text-center mb-7 text-4xl font-semibold">Çeviri +</h1>
-        {/* Üst Kısım */}
-        <div className="flex gap-2 text-black">
-          <Select
-            onChange={(e) => setSourceLang(e)}
-            value={sourceLang}
-            className="flex-1"
-            options={formatted}
-          />
-          <button
-            onClick={handleSwap}
-            className="text-white bg-zinc-700 px-6 py-2 rounded hover:ring-2 hover:bg-zinc-800"
-          >
-            Değiş
-          </button>
-          <Select
-            onChange={(e) => setTargetLang(e)}
-            value={targetLang}
-            className="flex-1"
-            options={formatted}
-          />
-        </div>
-        {/* text alanları */}
-        <div className="flex mt-5 gap-3 md:gap-[105px] max-md:flex-col">
-          <div className="flex-1">
-            <textarea
-              onChange={(e) => setText(e.target.value)}
-              className="w-full min-h-[300px] max-h-[500px] text-black p-[10px] text-[20px] rounded"
-            ></textarea>
-          </div>
-          <div className="flex-1 relative">
-            <textarea
-              value={translateState.answer}
-              disabled
-              className=" w-full min-h-[300px] max-h-[500px] text-gray-200 p-[10px] text-[20px] bg-slate-700 rounded "
-            ></textarea>
-            {translateState.isLoading && (
-              <div className="loader absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-                <div className="bar"></div>
-                <div className="bar"></div>
-                <div className="bar"></div>
-                <div className="bar"></div>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* Buton */}
-        <button
-          onClick={handleTranslate}
-          className="bg-zinc-700 mt-3 py-3 px-5 text-[17px] raunded hover:ring-2 hover:bg-zinc-900 transition"
-        >
-          Çevir
-        </button>
+    <div className="main-panel">
+      <h1 className="text-center text-4xl font-black mb-10 text-white uppercase tracking-widest">ÇEVİRİ +</h1>
+
+      <div className="flex flex-col md:flex-row gap-4 items-center mb-8 text-black">
+        <Select className="flex-1 w-full" onChange={setSourceLang} value={sourceLang} options={formatted} placeholder="Kaynak Dil" />
+        <button onClick={() => { setSourceLang(targetLang); setTargetLang(sourceLang); }} className="bg-teal-500 p-2 rounded-full text-white shadow-md">🔄</button>
+        <Select className="flex-1 w-full" onChange={setTargetLang} value={targetLang} options={formatted} placeholder="Hedef Dil" />
       </div>
+
+      <div className="content-grid">
+        <div className="input-box">
+          <span className="lang-label">{sourceLang.label}</span>
+          <textarea onChange={(e) => setText(e.target.value)} placeholder="Metni buraya yazın..." />
+        </div>
+        
+        <div className="input-box">
+          <span className="lang-label">{targetLang.label}</span>
+          <textarea 
+            value={translateState.answer || ""} 
+            disabled 
+            placeholder={translateState.isLoading ? "Çevriliyor..." : "Çeviri..."} 
+            className={translateState.answer ? "output-area" : ""} 
+          />
+        </div>
+      </div>
+
+      <button 
+        onClick={() => dispatch(translateText({ sourceLang, targetLang, text }))} 
+        className="btn-translate"
+        disabled={translateState.isLoading}
+      >
+        {translateState.isLoading ? "BEKLENİYOR..." : "METNİ ÇEVİR"}
+      </button>
     </div>
   );
 }

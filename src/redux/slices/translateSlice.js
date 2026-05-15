@@ -21,12 +21,14 @@ const translateSlice = createSlice({
       state.error = action.error.message;
     });
     builder.addCase(translateText.fulfilled, (state, action) => {
-      console.log(action);
       state.isLoading = false;
       state.error = null;
-      console.log(action);
-      state.answer = action.payload.translatedText;
+      
+      // DÜZELTME BURADA: 
+      // Gelen veri doğrudan metin olduğu için .translatedText kısmını sildik.
+      state.answer = action.payload; 
     });
   },
 });
+
 export default translateSlice.reducer;

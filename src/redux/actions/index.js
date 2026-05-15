@@ -1,32 +1,44 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../../utils/api";
+import axios from "axios";
 
-//* Asenkron thunk aksiyonu
-const getLanguages = createAsyncThunk("languages/getLanguages", async () => {
-  // API isteği atılır
-  const res = await api.get("/getLanguages");
+const API_KEY = "YOUR_API_KEY";
 
-  // payload'a return edilir
-  return res.data.data?.languages;
-});
+export const getLanguages = createAsyncThunk(
+  "languages/getLanguages",
+  async () => {
+    const res = await axios.get(
+      "https://openl-translate.p.rapidapi.com/translate/languages",
+      {
+        headers: {
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "openl-translate.p.rapidapi.com",
+        },
+      }
+    );
 
-export default getLanguages;
+    return res.data;
+  }
+);
 
-export const translateText = createAsyncThunk("translate", async (p) => {
-  //- API'YE Gönderilecek olan parametreleri belirleme
-  const params = new URLSearchParams();
+export const translateText = createAsyncThunk(
+  "translate/translateText",
+  async ({ text, source, target }) => {
+    const res = await axios.post(
+      "https://openl-translate.p.rapidapi.com/translate",
+      {
+        text: text,
+        source: source,
+        target: target,
+      },
+      {
+        headers: {
+          "content-type": "application/json",
+          "x-rapidapi-key": API_KEY,
+          "x-rapidapi-host": "openl-translate.p.rapidapi.com",
+        },
+      }
+    );
 
-  params.set("source_language", p.sourceLang.value);
-  params.set("target_language", p.targetLang.value);
-  params.set("text", p.text);
-
-  //* API'ye gönderilecek headerı belirledik.
-  const headers = {
-    "content-type": "application/x-www-form-urlencoded",
-  };
-
-  //*API YE İsteğini at
-  const res = await api.post("/translate", params, { headers });
-  //* payloadı belirle
-  return res.data.data;
-});
+    return res.data.translatedText;
+  }
+);
