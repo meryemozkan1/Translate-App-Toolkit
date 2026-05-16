@@ -1,8 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_KEY = "YOUR_API_KEY";
+const API_KEY = "9b6ef36538mshf715ea1f670b93bp1af15cjsn485435c9c67f";
 
+
+// DİLLER
 export const getLanguages = createAsyncThunk(
   "languages/getLanguages",
   async () => {
@@ -16,19 +18,24 @@ export const getLanguages = createAsyncThunk(
       }
     );
 
-    return res.data;
+    console.log("LANGUAGES:", res.data);
+
+    return res.data.languages || res.data || [];
   }
 );
 
+
+// ÇEVİRİ
 export const translateText = createAsyncThunk(
   "translate/translateText",
   async ({ text, source, target }) => {
+
     const res = await axios.post(
-      "https://openl-translate.p.rapidapi.com/translate",
+      "https://openl-translate.p.rapidapi.com/translate/bulk",
       {
-        text: text,
-        source: source,
-        target: target,
+        target_lang: target,
+        source_lang: source,
+        texts: [text],
       },
       {
         headers: {
@@ -39,6 +46,8 @@ export const translateText = createAsyncThunk(
       }
     );
 
-    return res.data.translatedText;
+    console.log("TRANSLATE:", res.data);
+
+    return res.data.translatedTexts?.[0] || "";
   }
 );
