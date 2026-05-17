@@ -11,9 +11,11 @@ function App() {
   const [sourceLang, setSourceLang] = useState({ label: "Turkish", value: "tr" });
   const [targetLang, setTargetLang] = useState({ label: "English", value: "en" });
   const [text, setText] = useState("");
+  
+  // 1. ve 2. Sorun için yerel hata uyarısı state'i
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
-    // Sadece bileşen yüklendiğinde BİR KEZ çalışır. 429 hatasını bu önler.
     dispatch(getLanguages());
   }, []); 
 
@@ -24,6 +26,19 @@ function App() {
       value: i.code || i.language,
     }));
   }, [languages]);
+
+  // Çeviri butonuna basıldığında çalışan güvenli fonksiyon
+  const handleTranslate = () => {
+    // 1. ve 2. SORUNUN ÇÖZÜMÜ: Boşluk ve trim kontrolü
+    if (!text || text.trim() === "") {
+      setValidationError("Lütfen metin girin"); 
+      return; // API'ye istek gönderilmesini engeller, fonksiyonu burada keser
+    }
+
+    // Girdi geçerliyse hata mesajını sıfırla ve isteği gönder
+    setValidationError("");
+    dispatch(translateText({ sourceLang, targetLang, text: text.trim() }));
+  };
 
   return (
     <div className="main-panel">
@@ -38,22 +53,42 @@ function App() {
       <div className="content-grid">
         <div className="input-box">
           <span className="lang-label">{sourceLang.label}</span>
-          <textarea onChange={(e) => setText(e.target.value)} placeholder="Metni buraya yazın..." />
+          <textarea 
+            onChange={(e) => {
+              setText(e.target.value);
+              // Kullanıcı yazı yazmaya başladığı an kırmızı uyarıyı ekrandan kaldırır
+              if (e.target.value.trim() !== "") setValidationError(""); 
+            }} 
+            placeholder="Metni buraya yazın..." 
+          />
+          {/* 1. ve 2. SORUNUN UI GÖSTERİMİ */}
+          {validationError && (
+            <p className="error-text" style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px", fontWeight: "bold" }}>
+              {validationError}
+            </p>
+          )}
         </div>
         
         <div className="input-box">
           <span className="lang-label">{targetLang.label}</span>
           <textarea 
-            value={translateState.answer || ""} 
+         
+            value={
+              validationError 
+                ? "" // Eğer validasyon hatası varsa sağ kutuyu tamamen boşalt (Eski çeviri kalmasın)
+                : translateState.error || translateState.isError
+                ? "Ağ isteği başarısız oldu. Lütfen internet bağlantınızı kontrol edin." // İnternet yoksa bu hata mesajını bas
+                : translateState.answer || "" // Her şey yolundaysa normal çeviriyi göster
+            } 
             disabled 
             placeholder={translateState.isLoading ? "Çevriliyor..." : "Çeviri..."} 
-            className={translateState.answer ? "output-area" : ""} 
+            className={`${translateState.answer ? "output-area" : ""} ${translateState.error || translateState.isError ? "text-red-500" : ""}`} 
           />
         </div>
       </div>
 
       <button 
-        onClick={() => dispatch(translateText({ sourceLang, targetLang, text }))} 
+        onClick={handleTranslate} // Tetikleyici yeni güvenli fonksiyona bağlandı
         className="btn-translate"
         disabled={translateState.isLoading}
       >
