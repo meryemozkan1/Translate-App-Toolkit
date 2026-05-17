@@ -1,26 +1,25 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_KEY = "9b6ef36538mshf715ea1f670b93bp1af15cjsn485435c9c67f";
-
 
 // DİLLER
 export const getLanguages = createAsyncThunk(
   "languages/getLanguages",
   async () => {
-    const res = await axios.get(
-      "https://openl-translate.p.rapidapi.com/translate/languages",
-      {
-        headers: {
-          "x-rapidapi-key": API_KEY,
-          "x-rapidapi-host": "openl-translate.p.rapidapi.com",
-        },
-      }
-    );
 
-    console.log("LANGUAGES:", res.data);
-
-    return res.data.languages || res.data || [];
+    return [
+      { code: "tr", name: "Turkish" },
+      { code: "en", name: "English" },
+      { code: "de", name: "German" },
+      { code: "fr", name: "French" },
+      { code: "es", name: "Spanish" },
+      { code: "it", name: "Italian" },
+      { code: "ru", name: "Russian" },
+      { code: "ja", name: "Japanese" },
+      { code: "ko", name: "Korean" },
+      { code: "zh", name: "Chinese" },
+      { code: "ar", name: "Arabic" },
+    ];
   }
 );
 
@@ -28,26 +27,14 @@ export const getLanguages = createAsyncThunk(
 // ÇEVİRİ
 export const translateText = createAsyncThunk(
   "translate/translateText",
-  async ({ text, source, target }) => {
+  async ({ text, sourceLang, targetLang }) => {
 
-    const res = await axios.post(
-      "https://openl-translate.p.rapidapi.com/translate/bulk",
-      {
-        target_lang: target,
-        source_lang: source,
-        texts: [text],
-      },
-      {
-        headers: {
-          "content-type": "application/json",
-          "x-rapidapi-key": API_KEY,
-          "x-rapidapi-host": "openl-translate.p.rapidapi.com",
-        },
-      }
+    const res = await axios.get(
+      `https://api.mymemory.translated.net/get?q=${text}&langpair=${sourceLang.value}|${targetLang.value}`
     );
 
-    console.log("TRANSLATE:", res.data);
+    console.log(res.data);
 
-    return res.data.translatedTexts?.[0] || "";
+    return res.data.responseData.translatedText;
   }
 );
