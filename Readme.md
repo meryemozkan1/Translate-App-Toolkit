@@ -26,7 +26,8 @@ Bu proje, farklı diller arasında metin çevirisi yapabilen bir Çeviri Uygulam
 
 - tailwind <br>
 
-<h1>Ekran Görüntüsü</h1>
-<hr>
 
-![](images/tarnslate.gif)
+
+## 📋 Proje Yönetimi ve Test Süreci
+Bu projenin geliştirme, bug takibi ve test süreçleri Trello üzerinden bir QA (Test Uzmanı) ile koordineli şekilde yürütülmüştür. İlgili Kanban panosuna aşağıdaki bağlantıdan ulaşabilirsiniz:
+- [Trello Proje Panosu](https://trello.com/b/vb99G02E/translate-app-grup-g)
